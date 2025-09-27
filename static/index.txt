@@ -1,0 +1,2004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VisualQKD Pro - QInsight Labs</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.0/axios.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #F5F5F5;
+            color: #333333;
+            overflow-x: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            gap: 8px;
+            padding: 8px;
+        }
+
+        /* Toggle button when panel is hidden */
+       /* .toggle-btn-fixed {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: #6B7C93;
+            border: none;
+            border-radius: 4px;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            font-size: 14px;
+            color: white;
+            z-index: 1000;
+            display: none;
+        }*/
+
+        /* Left Panel Styles */
+        .left-panel {
+            width: 280px;
+            background: #FFFFFF;
+            border-radius: 8px;
+            border: 1px solid #D0D0D0;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            transition: all 0.4s ease;
+        }
+
+        .left-panel.hidden {
+            width: 0;
+            padding: 0;
+            overflow: hidden;
+            flex: 0 0 0;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .logo {
+            width: 54px;
+            height: 54px;
+            background: #6B7C93;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .title-section h1 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #333333;
+        }
+
+        .title-section p {
+            font-size: 8px;
+            color: #666666;
+        }
+
+       /* .toggle-btn {
+            background: #C8C8C8;
+            border: none;
+            border-radius: 4px;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 12px;
+        }*/
+
+        .card {
+            background: #FFFFFF;
+            border-radius: 8px;
+            border: 1px solid #D0D0D0;
+            padding: 8px;
+        }
+
+        .section-title {
+            font-weight: 700;
+            font-size: 14px;
+            color: #333333;
+            margin-bottom: 8px;
+        }
+
+        .param-label {
+            font-size: 12px;
+            color: #666666;
+            margin-bottom: 4px;
+        }
+
+        .input-group {
+            margin-bottom: 12px;
+        }
+
+        .spin-box {
+            width: 100%;
+            padding: 4px 8px;
+            border: 1px solid #D0D0D0;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .slider {
+            flex: 1;
+            height: 4px;
+            background: #E0E0E0;
+            border-radius: 2px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .slider-value {
+            font-weight: bold;
+            font-size: 10px;
+            min-width: 60px;
+            text-align: right;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #de9494;
+            padding: 6px;
+            border-radius: 4px;
+            margin: 8px 0;
+        }
+
+        .checkbox-container input {
+            transform: scale(1.2);
+        }
+
+        .checkbox-container label {
+            font-size: 10px;
+            font-weight: 900;
+            color: black;
+        }
+
+        .preset-buttons {
+            display: flex;
+            gap: 4px;
+            margin: 8px 0;
+        }
+
+        .preset-btn {
+            flex: 1;
+            padding: 3px 5px;
+            border-radius: 6px;
+            border: 1px solid;
+            font-size: 9px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .preset-btn.clean {
+            background: #B8D4B8;
+            color: #2D5A2D;
+            border-color: #A8C4A8;
+        }
+
+        .preset-btn.noisy {
+            background: #B8CDE8;
+            color: #2D4A72;
+            border-color: #A8BDD8;
+        }
+
+        .preset-btn.eve {
+            background: #E8B8B8;
+            color: #722D2D;
+            border-color: #D8A8A8;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .action-btn {
+            padding: 8px 16px;
+            border: 1px solid;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .action-btn.run {
+            background: #B8D4B8;
+            color: #2D5A2D;
+            border-color: #A8C4A8;
+        }
+
+        .action-btn.reset {
+            background: #B8CDE8;
+            color: #2D4A72;
+            border-color: #A8BDD8;
+        }
+
+        .action-btn.export {
+            background: #F5E6B8;
+            color: #8B6F00;
+            border-color: #E5D6A8;
+        }
+
+        .action-btn.report {
+            background: #E8B8B8;
+            color: #722D2D;
+            border-color: #D8A8A8;
+        }
+
+        .action-btn.dark-mode {
+            background: #C8C8C8;
+            color: #505050;
+            border-color: #B8B8B8;
+        }
+
+        .action-btn:hover {
+            opacity: 0.8;
+            transform: translateY(-1px);
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #6B7C93;
+            border-top: 3px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 8px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Right Panel Styles */
+        .right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .top-row {
+            display: flex;
+            gap: 6px;
+            height: 240px;
+        }
+
+        .console-card {
+            width: 370px;
+            background: #FFFFFF;
+            border-radius: 8px;
+            border: 1px solid #D0D0D0;
+            padding: 6px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .console {
+            flex: 1;
+            background: #F9F9F9;
+            border-radius: 6px;
+            padding: 8px;
+            font-size: 10px;
+            line-height: 1.3;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+        }
+
+        .metrics-card {
+            width: 240px;
+            background: #FFFFFF;
+            border-radius: 8px;
+            border: 1px solid #D0D0D0;
+            padding: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #F5F5F5;
+            border: 1px solid #D0D0D0;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #6B7C93;
+            transition: width 0.6s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .metric-value {
+            font-size: 12px;
+            font-weight: bold;
+            color: #333333;
+        }
+
+        .chart-card {
+            flex: 1;
+            background: #FFFFFF;
+            border-radius: 8px;
+            border: 1px solid #D0D0D0;
+            padding: 6px;
+            min-width: 0;
+        }
+
+        .plots-row {
+            display: flex;
+            gap: 6px;
+            flex: 1;
+            height: auto;
+            min-height: 240px;
+        }
+
+        .plot-container {
+            flex: 1;
+            background: #FFFFFF;
+            border-radius: 8px;
+            border: 1px solid #D0D0D0;
+            padding: 6px;
+            position: relative;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .plot-container canvas {
+            flex: 1;
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .canvas-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .bottom-row {
+            display: flex;
+            gap: 6px;
+            height: 240px;
+        }
+
+        .history-card {
+            flex: 1;
+            background: #FFFFFF;
+            border-radius: 8px;
+            border: 1px solid #D0D0D0;
+            padding: 6px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .history-table {
+            flex: 1;
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9px;
+            overflow-y: auto;
+        }
+
+        .history-table th,
+        .history-table td {
+            padding: 4px 6px;
+            text-align: center;
+            border-bottom: 1px solid #E0E0E0;
+        }
+
+        .history-table th {
+            background: #F0F0F0;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+
+        .history-table tbody {
+            display: block;
+            height: 180px;
+            overflow-y: auto;
+        }
+
+        .history-table thead,
+        .history-table tbody tr {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+        }
+
+        /* Popup Styles */
+        .popup {
+            display: none;
+            position: fixed;
+            top: 8px;
+            right: 8px;
+            width: 70%;
+            height: calc(100vh - 16px);
+            background: #FFFFFF;
+            border: 1px solid #D0D0D0;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            z-index: 2000;
+            overflow: hidden;
+        }
+
+        .popup-content {
+            display: flex;
+            height: 100%;
+            gap: 8px;
+            padding: 8px;
+        }
+
+        .popup-left-panel {
+            width: 280px;
+            background: #FFFFFF;
+            border-right: 1px solid #D0D0D0;
+            padding: 8px;
+            overflow-y: auto;
+        }
+
+        .popup-chart-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 8px;
+        }
+
+        .popup-toolbar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .popup-toolbar button {
+            padding: 6px 12px;
+            border: 1px solid #D0D0D0;
+            border-radius: 4px;
+            background: #F5F5F5;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .popup-toolbar button:hover {
+            background: #E0E0E0;
+        }
+
+        .popup-canvas {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+        }
+
+        .popup-close {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #E8B8B8;
+            border: none;
+            border-radius: 4px;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 12px;
+            color: #722D2D;
+        }
+
+        /* Dark Mode Styles */
+        body.dark-mode {
+            background: #1E1E1E;
+            color: #E0E0E0;
+        }
+
+        body.dark-mode .left-panel,
+        body.dark-mode .card,
+        body.dark-mode .console-card,
+        body.dark-mode .metrics-card,
+        body.dark-mode .chart-card,
+        body.dark-mode .plot-container,
+        body.dark-mode .history-card,
+        body.dark-mode .popup,
+        body.dark-mode .popup-left-panel {
+            background: #2A2A2A;
+            border-color: #3A3A3A;
+        }
+
+        body.dark-mode .console {
+            background: #2A2A2A;
+            color: #E0E0E0;
+        }
+
+        body.dark-mode .section-title,
+        body.dark-mode .title-section h1 {
+            color: #E0E0E0;
+        }
+
+        body.dark-mode .param-label {
+            color: #A0A0A0;
+        }
+
+        body.dark-mode .history-table th {
+            background: #3A3A3A;
+            color: #E0E0E0;
+        }
+
+       /* body.dark-mode .toggle-btn-fixed {
+            background: #4A4A4A;
+            color: #E0E0E0;
+        }*/
+
+        body.dark-mode .popup-toolbar button {
+            background: #3A3A3A;
+            color: #E0E0E0;
+            border-color: #4A4A4A;
+        }
+
+        body.dark-mode .popup-close {
+            background: #722D2D;
+            color: #E0E0E0;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .left-panel {
+                width: 250px;
+            }
+            
+            .console-card {
+                width: 320px;
+            }
+            
+            .metrics-card {
+                width: 200px;
+            }
+            
+            .popup {
+                width: 80%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .left-panel {
+                width: 100%;
+            }
+            
+            .top-row,
+            .plots-row,
+            .bottom-row {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .console-card,
+            .metrics-card,
+            .chart-card {
+                width: 100%;
+            }
+            
+           /* .toggle-btn-fixed {
+                top: 10px;
+                left: 10px;
+            }*/
+            
+            .popup {
+                width: 95%;
+                height: 95vh;
+                top: 2.5%;
+                right: 2.5%;
+            }
+            
+          /*  .popup-left-panel {
+                width: 100%;
+                max-height: 40%;
+                border-right: none;
+                border-bottom: 1px solid #D0D0D0;
+            }*/
+            
+            .popup-content {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Left Panel -->
+        <div class="left-panel" id="leftPanel">
+            <div class="header">
+                <div class="logo">QKD</div>
+                <div class="title-section">
+                    <h1>VISUALQKD PRO</h1>
+                    <p>BY QINSIGHT LABS PVT. LTD.</p>
+                </div>
+               <!-- <button class="toggle-btn" onclick="toggleLeftPanel()">◄</button> -->
+            </div>
+
+            <div class="card">
+                <div class="section-title">SIMULATION PARAMETERS</div>
+                
+                <div class="input-group">
+                    <div class="param-label">NUMBER OF QUBITS</div>
+                    <input type="number" class="spin-box" id="qubits" value="2048" min="100" max="1000000">
+                </div>
+
+                <div class="input-group">
+                    <div class="param-label">NOISE (%)</div>
+                    <div class="slider-container">
+                        <div class="slider-value" id="noiseValue">0%</div>
+                        <input type="range" class="slider" id="noiseSlider" min="0" max="100" value="0" oninput="updateSliderValue('noise')">
+                    </div>
+                </div>
+
+                <div class="checkbox-container">
+                    <input type="checkbox" id="eveCheckbox">
+                    <label for="eveCheckbox">INCLUDE EVE (ADVERSARY)</label>
+                </div>
+
+                <div class="section-title">LEAKAGE SECURITY</div>
+                
+                <div class="input-group">
+                    <div class="param-label">CASCADE LEAKAGE (BITS)</div>
+                    <div class="slider-container">
+                        <div class="slider-value" id="cascadeValue">0 bits</div>
+                        <input type="range" class="slider" id="cascadeSlider" min="0" max="1000" value="0" oninput="updateSliderValue('cascade')">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <div class="param-label">PRIVACY AMPLIFICATION LEAK SCALE</div>
+                    <div class="slider-container">
+                        <div class="slider-value" id="qberLeakValue">0.00</div>
+                        <input type="range" class="slider" id="qberLeakSlider" min="0" max="1000" value="0" oninput="updateSliderValue('qberLeak')">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <div class="param-label">SECURITY MARGIN (BITS)</div>
+                    <div class="slider-container">
+                        <div class="slider-value" id="marginValue">0 bits</div>
+                        <input type="range" class="slider" id="marginSlider" min="0" max="1000" value="0" oninput="updateSliderValue('margin')">
+                    </div>
+                </div>
+
+                <div class="preset-buttons">
+                    <button class="preset-btn clean" onclick="applyPreset('clean')">CLEAN</button>
+                    <button class="preset-btn noisy" onclick="applyPreset('noisy')">NOISE 5%</button>
+                    <button class="preset-btn eve" onclick="applyPreset('eve')">EVE</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="section-title">ACTIONS</div>
+                <div class="action-buttons">
+                    <button class="action-btn run" onclick="runQKD()">▶️ RUN QKD</button>
+                    <button class="action-btn reset" onclick="resetSimulation()">⟲ RESET</button>
+                    <button class="action-btn export" onclick="exportData()">⬇ EXPORT</button>
+                    <button class="action-btn report" onclick="generateReport()">💾 REPORT</button>
+                    <button class="action-btn dark-mode" id="darkModeBtn" onclick="toggleDarkMode()">DARK MODE</button>
+                </div>
+                <div class="loading-spinner" id="loadingSpinner"></div>
+            </div>
+        </div>
+
+        <!-- Right Panel -->
+        <div class="right-panel">
+            <div class="top-row">
+                <div class="console-card">
+                    <div class="section-title">SIMULATION CONSOLE</div>
+                    <div class="console" id="console">CLICK 'RUN QKD' TO START SIMULATION...</div>
+                </div>
+
+                <div class="metrics-card">
+                    <div class="section-title">LIVE METRICS</div>
+                    <div class="param-label">QBER (%)</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="qberProgress" style="width: 0%;">0%</div>
+                    </div>
+                    <div class="param-label" >KEY LENGTH</div>
+                    <div class="metric-value" id="keyLength" style="background-color: #5682B1;" >0</div>
+                    <div class="param-label">TOTAL LEAK</div>
+                    <div class="metric-value" id="totalLeak" style="background-color: #5682B1;">0</div>
+                </div>
+
+                <div class="chart-card" onclick="openPopup('qberChart')">
+                    <div class="section-title">QBER VS NOISE</div>
+                    <canvas id="qberChart" width="400" height="180"></canvas>
+                </div>
+            </div>
+
+            <div class="plots-row">
+                <div class="plot-container" onclick="openPopup('keyLengthChart')">
+                    <canvas id="keyLengthChart" width="300" height="180"></canvas>
+                </div>
+                <div class="plot-container" onclick="openPopup('keyTrendChart')">
+                    <canvas id="keyTrendChart" width="300" height="180"></canvas>
+                </div>
+                <div class="plot-container" onclick="openPopup('bitCharts')">
+                    <div style="height: 60px;">
+                        <canvas id="bitBarChart"></canvas>
+                    </div>
+                    <div style="flex: 1;">
+                        <canvas id="bitCumulativeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bottom-row">
+                <div class="plot-container" style="width: 280px;" onclick="openPopup('leakageChart')">
+                    <canvas id="leakageChart" width="250" height="200"></canvas>
+                </div>
+
+                <div class="history-card">
+                    <div class="section-title">RUN HISTORY</div>
+                    <div style="overflow-y: auto; flex: 1;">
+                        <table class="history-table">
+                            <thead>
+                                <tr>
+                                    <th>TIME</th>
+                                    <th>QUBITS</th>
+                                    <th>NOISE %</th>
+                                    <th>EVE</th>
+                                    <th>QBER %</th>
+                                    <th>KEY LEN</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyTableBody">
+                                <!-- Dynamic content -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Popup -->
+    <div class="popup" id="chartPopup">
+        <button class="popup-close" onclick="closePopup()">✖</button>
+        <div class="popup-content">
+            <div class="popup-left-panel" id="popupLeftPanel"></div>
+            <div class="popup-chart-container">
+                <div class="popup-toolbar">
+                    <button onclick="zoomChart(1.2)">Zoom In</button>
+                    <button onclick="zoomChart(0.8)">Zoom Out</button>
+                    <button onclick="panChart(-50)">Pan Left</button>
+                    <button onclick="panChart(50)">Pan Right</button>
+                    <button onclick="resetChart()">Reset</button>
+                </div>
+                <div class="popup-canvas">
+                    <canvas id="popupChartCanvas"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let isDarkMode = false;
+        let isLeftPanelVisible = true;
+        let runHistory = [];
+        let keyLengthHistory = [];
+        let charts = {};
+        let popupChart = null;
+        let currentChartId = null;
+
+        // Initialize charts
+        function initializeCharts() {
+            // QBER vs Noise Chart
+            const qberCtx = document.getElementById('qberChart').getContext('2d');
+            charts.qberChart = new Chart(qberCtx, {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        {
+                            label: 'Eve OFF',
+                            data: [],
+                            borderColor: '#1f77b4',
+                            backgroundColor: '#1f77b4',
+                            pointStyle: 'circle',
+                            pointRadius: 6,
+                            showLine: true
+                        },
+                        {
+                            label: 'Eve ON',
+                            data: [],
+                            borderColor: '#d62728',
+                            backgroundColor: '#d62728',
+                            pointStyle: 'rect',
+                            pointRadius: 6,
+                            showLine: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: {
+                        padding: {
+                            bottom: 30
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                font: { size: 10 }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            title: {
+                                display: true,
+                                text: 'Noise (%)',
+                                font: { size: 12 }
+                            },
+                            ticks: {
+                                font: { size: 10 }
+                            },
+                            beginAtZero: true
+                        },
+                        y: {
+                            type: 'linear',
+                            title: {
+                                display: true,
+                                text: 'QBER (%)',
+                                font: { size: 12 }
+                            },
+                            ticks: {
+                                font: { size: 10 }
+                            },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Key Length vs Noise Chart
+            const keyLengthCtx = document.getElementById('keyLengthChart').getContext('2d');
+            charts.keyLengthChart = new Chart(keyLengthCtx, {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        {
+                            label: 'Eve OFF',
+                            data: [],
+                            borderColor: '#1f77b4',
+                            backgroundColor: '#1f77b4',
+                            pointStyle: 'circle',
+                            pointRadius: 6,
+                            showLine: true
+                        },
+                        {
+                            label: 'Eve ON',
+                            data: [],
+                            borderColor: '#d62728',
+                            backgroundColor: '#d62728',
+                            pointStyle: 'rect',
+                            pointRadius: 6,
+                            showLine: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'KEY LENGTH VS NOISE'
+                        },
+                        legend: { position: 'top' }
+                    },
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            title: {
+                                display: true,
+                                text: 'Noise (%)'
+                            },
+                            beginAtZero: true
+                        },
+                        y: {
+                            type: 'linear',
+                            title: {
+                                display: true,
+                                text: 'Key Length'
+                            },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Key Length Trend Chart
+            const keyTrendCtx = document.getElementById('keyTrendChart').getContext('2d');
+            charts.keyTrendChart = new Chart(keyTrendCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Key Length',
+                        data: [],
+                        borderColor: '#6B7C93',
+                        backgroundColor: '#6B7C93',
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'KEY LENGTH (TREND)'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'RUN #'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'KEY LENGTH'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Bit Bar Chart
+            const bitBarCtx = document.getElementById('bitBarChart').getContext('2d');
+            charts.bitBarChart = new Chart(bitBarCtx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        backgroundColor: [],
+                        barThickness: 1,
+                        categoryPercentage: 1.0,
+                        barPercentage: 1.0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Bit Agreement (Blue = match, Gray = mismatch)',
+                            font: { size: 12 }
+                        },
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { display: false },
+                        y: { display: false, min: 0, max: 1, grid: { display: false } }
+                    },
+                    elements: {
+                        bar: { borderWidth: 0 }
+                    }
+                }
+            });
+
+            // Bit Cumulative Chart
+            const bitCumulativeCtx = document.getElementById('bitCumulativeChart').getContext('2d');
+            charts.bitCumulativeChart = new Chart(bitCumulativeCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Cumulative Agreement',
+                        data: [],
+                        borderColor: '#1f77b4',
+                        backgroundColor: '#1f77b4',
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Sifted bit index',
+                                font: { size: 10 }
+                            },
+                            ticks: { font: { size: 8 } }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Cumulative Agreement',
+                                font: { size: 10 }
+                            },
+                            min: 0,
+                            max: 150,
+                            ticks: { font: { size: 8 } }
+                        }
+                    }
+                }
+            });
+
+            // Leakage Chart (Doughnut)
+            const leakageCtx = document.getElementById('leakageChart').getContext('2d');
+            charts.leakageChart = new Chart(leakageCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Cascade', 'QBER', 'PA', 'Margin'],
+                    datasets: [{
+                        data: [0, 0, 0, 0],
+                        backgroundColor: ['#E8B8B8', '#6B7C93', '#B8CDE8', '#F5E6B8'],
+                        borderColor: '#333333',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'LEAKAGE BREAKDOWN'
+                        },
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        // Generate bit agreement data
+        function generateBitAgreementData(qber = 20.0) {
+            const sampleSize = 300;
+            const pMismatch = qber / 100.0;
+            const bitMatches = [];
+            const cumulative = [];
+            const xPositions = [];
+            
+            for (let i = 0; i < sampleSize; i++) {
+                bitMatches.push(Math.random() > pMismatch ? 1 : 0);
+                xPositions.push(i);
+            }
+            
+            let sum = 0;
+            for (let i = 0; i < sampleSize; i++) {
+                sum += bitMatches[i];
+                cumulative.push((sum / (i + 1)) * 100);
+            }
+            
+            return { bitMatches, cumulative, xPositions };
+        }
+
+        // Update slider values
+        function updateSliderValue(type) {
+            const slider = document.getElementById(type + 'Slider');
+            const valueDisplay = document.getElementById(type + 'Value');
+            const value = parseInt(slider.value);
+            
+            switch(type) {
+                case 'noise':
+                    valueDisplay.textContent = value + '%';
+                    break;
+                case 'cascade':
+                    valueDisplay.textContent = value + ' bits';
+                    break;
+                case 'qberLeak':
+                    valueDisplay.textContent = (value / 100).toFixed(2);
+                    break;
+                case 'margin':
+                    valueDisplay.textContent = value + ' bits';
+                    break;
+            }
+
+            // Update popup sliders if popup is open
+            const popupSlider = document.getElementById('popup' + type.charAt(0).toUpperCase() + type.slice(1) + 'Slider');
+            const popupValueDisplay = document.getElementById('popup' + type.charAt(0).toUpperCase() + type.slice(1) + 'Value');
+            if (popupSlider && popupValueDisplay) {
+                popupSlider.value = slider.value;
+                popupValueDisplay.textContent = valueDisplay.textContent;
+            }
+        }
+
+        // Apply presets
+        function applyPreset(preset) {
+            const noiseSlider = document.getElementById('noiseSlider');
+            const cascadeSlider = document.getElementById('cascadeSlider');
+            const qberLeakSlider = document.getElementById('qberLeakSlider');
+            const marginSlider = document.getElementById('marginSlider');
+            const eveCheckbox = document.getElementById('eveCheckbox');
+
+            switch(preset) {
+                case 'clean':
+                    noiseSlider.value = 0;
+                    cascadeSlider.value = 0;
+                    qberLeakSlider.value = 0;
+                    marginSlider.value = 0;
+                    eveCheckbox.checked = false;
+                    break;
+                case 'noisy':
+                    noiseSlider.value = 5;
+                    cascadeSlider.value = 0;
+                    qberLeakSlider.value = 0;
+                    marginSlider.value = 0;
+                    eveCheckbox.checked = false;
+                    break;
+                case 'eve':
+                    noiseSlider.value = 8;
+                    cascadeSlider.value = 120;
+                    qberLeakSlider.value = 60;
+                    marginSlider.value = 32;
+                    eveCheckbox.checked = !eveCheckbox.checked;
+                    break;
+            }
+            
+            // Update all slider displays
+            updateSliderValue('noise');
+            updateSliderValue('cascade');
+            updateSliderValue('qberLeak');
+            updateSliderValue('margin');
+
+            // Update popup controls
+            syncPopupControls();
+        }
+
+        // Sync popup controls with main controls
+        function syncPopupControls() {
+            const popupLeftPanel = document.getElementById('popupLeftPanel');
+            if (!popupLeftPanel) return;
+
+            const qubitsInput = document.getElementById('qubits');
+            const noiseSlider = document.getElementById('noiseSlider');
+            const cascadeSlider = document.getElementById('cascadeSlider');
+            const qberLeakSlider = document.getElementById('qberLeakSlider');
+            const marginSlider = document.getElementById('marginSlider');
+            const eveCheckbox = document.getElementById('eveCheckbox');
+
+            const popupQubitsInput = document.getElementById('popupQubits');
+            const popupNoiseSlider = document.getElementById('popupNoiseSlider');
+            const popupCascadeSlider = document.getElementById('popupCascadeSlider');
+            const popupQberLeakSlider = document.getElementById('popupQberLeakSlider');
+            const popupMarginSlider = document.getElementById('popupMarginSlider');
+            const popupEveCheckbox = document.getElementById('popupEveCheckbox');
+
+            if (popupQubitsInput) popupQubitsInput.value = qubitsInput.value;
+            if (popupNoiseSlider) popupNoiseSlider.value = noiseSlider.value;
+            if (popupCascadeSlider) popupCascadeSlider.value = cascadeSlider.value;
+            if (popupQberLeakSlider) popupQberLeakSlider.value = qberLeakSlider.value;
+            if (popupMarginSlider) popupMarginSlider.value = marginSlider.value;
+            if (popupEveCheckbox) popupEveCheckbox.checked = eveCheckbox.checked;
+
+            updateSliderValue('noise');
+            updateSliderValue('cascade');
+            updateSliderValue('qberLeak');
+            updateSliderValue('margin');
+        }
+
+        // Toggle left panel
+        function toggleLeftPanel() {
+            const leftPanel = document.getElementById('leftPanel');
+            const toggleBtn = document.querySelector('.toggle-btn');
+            const fixedToggleBtn = document.getElementById('toggleBtnFixed');
+            
+            isLeftPanelVisible = !isLeftPanelVisible;
+            
+            if (isLeftPanelVisible) {
+                leftPanel.classList.remove('hidden');
+                toggleBtn.textContent = '◄';
+                fixedToggleBtn.style.display = 'none';
+            } else {
+                leftPanel.classList.add('hidden');
+                toggleBtn.textContent = '►';
+                fixedToggleBtn.style.display = 'block';
+            }
+        }
+
+        // Toggle dark mode
+        function toggleDarkMode() {
+            isDarkMode = !isDarkMode;
+            const body = document.body;
+            const darkModeBtn = document.getElementById('darkModeBtn');
+            const popupDarkModeBtn = document.getElementById('popupDarkModeBtn');
+            
+            if (isDarkMode) {
+                body.classList.add('dark-mode');
+                darkModeBtn.textContent = 'LIGHT MODE';
+                if (popupDarkModeBtn) popupDarkModeBtn.textContent = 'LIGHT MODE';
+                updateChartsTheme(true);
+            } else {
+                body.classList.remove('dark-mode');
+                darkModeBtn.textContent = 'DARK MODE';
+                if (popupDarkModeBtn) popupDarkModeBtn.textContent = 'DARK MODE';
+                updateChartsTheme(false);
+            }
+        }
+
+        // Update charts theme
+        function updateChartsTheme(dark) {
+            const textColor = dark ? '#E0E0E0' : '#333333';
+            const gridColor = dark ? '#3A3A3A' : '#E0E0E0';
+            
+            Object.values(charts).forEach(chart => {
+                if (chart.options) {
+                    chart.options.color = textColor;
+                    if (chart.options.scales) {
+                        Object.keys(chart.options.scales).forEach(scale => {
+                            if (chart.options.scales[scale].grid) {
+                                chart.options.scales[scale].grid.color = gridColor;
+                            }
+                            if (chart.options.scales[scale].ticks) {
+                                chart.options.scales[scale].ticks.color = textColor;
+                            }
+                        });
+                    }
+                    chart.update();
+                }
+            });
+
+            if (popupChart && popupChart.options) {
+                popupChart.options.color = textColor;
+                if (popupChart.options.scales) {
+                    Object.keys(popupChart.options.scales).forEach(scale => {
+                        if (popupChart.options.scales[scale].grid) {
+                            popupChart.options.scales[scale].grid.color = gridColor;
+                        }
+                        if (popupChart.options.scales[scale].ticks) {
+                            popupChart.options.scales[scale].ticks.color = textColor;
+                        }
+                    });
+                }
+                popupChart.update();
+            }
+        }
+
+        // Open popup with selected chart
+        function openPopup(chartId) {
+            const popup = document.getElementById('chartPopup');
+            const popupCanvas = document.getElementById('popupChartCanvas');
+            const popupLeftPanel = document.getElementById('popupLeftPanel');
+
+            // Clone left panel content
+            const leftPanel = document.getElementById('leftPanel');
+            popupLeftPanel.innerHTML = leftPanel.innerHTML;
+
+            // Update IDs to avoid conflicts
+            popupLeftPanel.querySelector('#qubits').id = 'popupQubits';
+            popupLeftPanel.querySelector('#noiseSlider').id = 'popupNoiseSlider';
+            popupLeftPanel.querySelector('#noiseValue').id = 'popupNoiseValue';
+            popupLeftPanel.querySelector('#cascadeSlider').id = 'popupCascadeSlider';
+            popupLeftPanel.querySelector('#cascadeValue').id = 'popupCascadeValue';
+            popupLeftPanel.querySelector('#qberLeakSlider').id = 'popupQberLeakSlider';
+            popupLeftPanel.querySelector('#qberLeakValue').id = 'popupQberLeakValue';
+            popupLeftPanel.querySelector('#marginSlider').id = 'popupMarginSlider';
+            popupLeftPanel.querySelector('#marginValue').id = 'popupMarginValue';
+            popupLeftPanel.querySelector('#eveCheckbox').id = 'popupEveCheckbox';
+            popupLeftPanel.querySelector('.toggle-btn').remove(); // Remove toggle button in popup
+            popupLeftPanel.querySelector('.action-btn.run').onclick = runQKD;
+            popupLeftPanel.querySelector('.action-btn.reset').onclick = resetSimulation;
+            popupLeftPanel.querySelector('.action-btn.export').onclick = exportData;
+            popupLeftPanel.querySelector('.action-btn.report').onclick = generateReport;
+            popupLeftPanel.querySelector('.action-btn.dark-mode').id = 'popupDarkModeBtn';
+            popupLeftPanel.querySelector('#popupDarkModeBtn').onclick = toggleDarkMode;
+
+            // Add event listeners for popup sliders
+            popupLeftPanel.querySelector('#popupNoiseSlider').addEventListener('input', () => {
+                document.getElementById('noiseSlider').value = document.getElementById('popupNoiseSlider').value;
+                updateSliderValue('noise');
+            });
+            popupLeftPanel.querySelector('#popupCascadeSlider').addEventListener('input', () => {
+                document.getElementById('cascadeSlider').value = document.getElementById('popupCascadeSlider').value;
+                updateSliderValue('cascade');
+            });
+            popupLeftPanel.querySelector('#popupQberLeakSlider').addEventListener('input', () => {
+                document.getElementById('qberLeakSlider').value = document.getElementById('popupQberLeakSlider').value;
+                updateSliderValue('qberLeak');
+            });
+            popupLeftPanel.querySelector('#popupMarginSlider').addEventListener('input', () => {
+                document.getElementById('marginSlider').value = document.getElementById('popupMarginSlider').value;
+                updateSliderValue('margin');
+            });
+            popupLeftPanel.querySelector('#popupQubits').addEventListener('input', () => {
+                document.getElementById('qubits').value = document.getElementById('popupQubits').value;
+            });
+            popupLeftPanel.querySelector('#popupEveCheckbox').addEventListener('change', () => {
+                document.getElementById('eveCheckbox').checked = document.getElementById('popupEveCheckbox').checked;
+            });
+
+            // Sync controls
+            syncPopupControls();
+
+            // Destroy previous popup chart if exists
+            if (popupChart) {
+                popupChart.destroy();
+            }
+
+            currentChartId = chartId;
+
+            // Create new chart in popup
+            const ctx = popupCanvas.getContext('2d');
+            if (chartId === 'bitCharts') {
+                // Special handling for bit charts (stacked vertically)
+                popupCanvas.parentElement.style.display = 'flex';
+                popupCanvas.parentElement.style.flexDirection = 'column';
+                popupCanvas.parentElement.innerHTML = `
+                    <div style="height: 20%;">
+                        <canvas id="popupBitBarChart"></canvas>
+                    </div>
+                    <div style="flex: 1;">
+                        <canvas id="popupBitCumulativeChart"></canvas>
+                    </div>
+                `;
+                const bitBarCtx = document.getElementById('popupBitBarChart').getContext('2d');
+                const bitCumulativeCtx = document.getElementById('popupBitCumulativeChart').getContext('2d');
+                
+                popupChart = {
+                    bitBarChart: new Chart(bitBarCtx, JSON.parse(JSON.stringify(charts.bitBarChart.config))),
+                    bitCumulativeChart: new Chart(bitCumulativeCtx, JSON.parse(JSON.stringify(charts.bitCumulativeChart.config)))
+                };
+                
+                // Update data
+                popupChart.bitBarChart.data = JSON.parse(JSON.stringify(charts.bitBarChart.data));
+                popupChart.bitCumulativeChart.data = JSON.parse(JSON.stringify(charts.bitCumulativeChart.data));
+                popupChart.bitBarChart.update();
+                popupChart.bitCumulativeChart.update();
+            } else {
+                popupCanvas.parentElement.style.display = 'block';
+                popupCanvas.parentElement.innerHTML = '<canvas id="popupChartCanvas"></canvas>';
+                const newCtx = document.getElementById('popupChartCanvas').getContext('2d');
+                popupChart = new Chart(newCtx, JSON.parse(JSON.stringify(charts[chartId].config)));
+                popupChart.data = JSON.parse(JSON.stringify(charts[chartId].data));
+                popupChart.update();
+            }
+
+            popup.style.display = 'block';
+        }
+
+        // Close popup
+        function closePopup() {
+            const popup = document.getElementById('chartPopup');
+            if (popupChart) {
+                if (currentChartId === 'bitCharts') {
+                    popupChart.bitBarChart.destroy();
+                    popupChart.bitCumulativeChart.destroy();
+                } else {
+                    popupChart.destroy();
+                }
+                popupChart = null;
+            }
+            currentChartId = null;
+            popup.style.display = 'none';
+        }
+
+        // Zoom chart
+        function zoomChart(factor) {
+            if (!popupChart) return;
+            if (currentChartId === 'bitCharts') {
+                ['bitBarChart', 'bitCumulativeChart'].forEach(chart => {
+                    if (popupChart[chart].options.scales.x) {
+                        const xScale = popupChart[chart].options.scales.x;
+                        xScale.min = xScale.min ? xScale.min * factor : popupChart[chart].scales.x.min * factor;
+                        xScale.max = xScale.max ? xScale.max * factor : popupChart[chart].scales.x.max * factor;
+                    }
+                    if (popupChart[chart].options.scales.y) {
+                        const yScale = popupChart[chart].options.scales.y;
+                        yScale.min = yScale.min ? yScale.min * factor : popupChart[chart].scales.y.min * factor;
+                        yScale.max = yScale.max ? yScale.max * factor : popupChart[chart].scales.y.max * factor;
+                    }
+                    popupChart[chart].update();
+                });
+            } else {
+                if (popupChart.options.scales.x) {
+                    const xScale = popupChart.options.scales.x;
+                    xScale.min = xScale.min ? xScale.min * factor : popupChart.scales.x.min * factor;
+                    xScale.max = xScale.max ? xScale.max * factor : popupChart.scales.x.max * factor;
+                }
+                if (popupChart.options.scales.y) {
+                    const yScale = popupChart.options.scales.y;
+                    yScale.min = yScale.min ? yScale.min * factor : popupChart.scales.y.min * factor;
+                    yScale.max = yScale.max ? yScale.max * factor : popupChart.scales.y.max * factor;
+                }
+                popupChart.update();
+            }
+        }
+
+        // Pan chart
+        function panChart(offset) {
+            if (!popupChart) return;
+            if (currentChartId === 'bitCharts') {
+                ['bitBarChart', 'bitCumulativeChart'].forEach(chart => {
+                    if (popupChart[chart].options.scales.x) {
+                        const xScale = popupChart[chart].options.scales.x;
+                        const range = (xScale.max || popupChart[chart].scales.x.max) - (xScale.min || popupChart[chart].scales.x.min);
+                        xScale.min = (xScale.min || popupChart[chart].scales.x.min) + offset;
+                        xScale.max = (xScale.max || popupChart[chart].scales.x.max) + offset;
+                        popupChart[chart].update();
+                    }
+                });
+            } else {
+                if (popupChart.options.scales.x) {
+                    const xScale = popupChart.options.scales.x;
+                    const range = (xScale.max || popupChart.scales.x.max) - (xScale.min || popupChart.scales.x.min);
+                    xScale.min = (xScale.min || popupChart.scales.x.min) + offset;
+                    xScale.max = (xScale.max || popupChart.scales.x.max) + offset;
+                    popupChart.update();
+                }
+            }
+        }
+
+        // Reset chart
+        function resetChart() {
+            if (!popupChart) return;
+            if (currentChartId === 'bitCharts') {
+                ['bitBarChart', 'bitCumulativeChart'].forEach(chart => {
+                    popupChart[chart].options.scales.x.min = undefined;
+                    popupChart[chart].options.scales.x.max = undefined;
+                    popupChart[chart].options.scales.y.min = undefined;
+                    popupChart[chart].options.scales.y.max = undefined;
+                    popupChart[chart].update();
+                });
+            } else {
+                popupChart.options.scales.x.min = undefined;
+                popupChart.options.scales.x.max = undefined;
+                popupChart.options.scales.y.min = undefined;
+                popupChart.options.scales.y.max = undefined;
+                popupChart.update();
+            }
+        }
+
+        // Update Bit Agreement charts
+        function updateBitAgreementChart(bitMatches, qber) {
+            let agreementData;
+            if (!bitMatches || bitMatches.length === 0) {
+                agreementData = generateBitAgreementData(qber || 20.0);
+            } else {
+                const sampleSize = bitMatches.length;
+                const xPositions = Array.from({length: sampleSize}, (_, i) => i);
+                let sum = 0;
+                const cumulative = bitMatches.map((m, i) => {
+                    sum += m;
+                    return (sum / (i + 1)) * 100;
+                });
+                agreementData = { bitMatches, cumulative, xPositions };
+            }
+
+            const colors = agreementData.bitMatches.map(m => m ? '#1f77b4' : '#a9a9a9');
+
+            // Update main bar chart
+            const barChart = charts.bitBarChart;
+            barChart.data.labels = agreementData.xPositions;
+            barChart.data.datasets[0].data = agreementData.bitMatches;
+            barChart.data.datasets[0].backgroundColor = colors;
+            barChart.update();
+
+            // Update main cumulative chart
+            const lineChart = charts.bitCumulativeChart;
+            lineChart.data.labels = agreementData.xPositions;
+            lineChart.data.datasets[0].data = agreementData.cumulative;
+            lineChart.update();
+
+            // Update popup charts if open
+            if (popupChart && currentChartId === 'bitCharts') {
+                popupChart.bitBarChart.data.labels = agreementData.xPositions;
+                popupChart.bitBarChart.data.datasets[0].data = agreementData.bitMatches;
+                popupChart.bitBarChart.data.datasets[0].backgroundColor = colors;
+                popupChart.bitBarChart.update();
+
+                popupChart.bitCumulativeChart.data.labels = agreementData.xPositions;
+                popupChart.bitCumulativeChart.data.datasets[0].data = agreementData.cumulative;
+                popupChart.bitCumulativeChart.update();
+            }
+        }
+
+        // Run QKD simulation
+        async function runQKD() {
+            const runBtn = document.querySelector('.action-btn.run');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const console = document.getElementById('console');
+            
+            // Show loading state
+            runBtn.disabled = true;
+            runBtn.style.opacity = '0.5';
+            loadingSpinner.style.display = 'block';
+            
+            try {
+                // Get parameters
+                const params = {
+                    n_bits: parseInt(document.getElementById('qubits').value),
+                    noise_prob: parseInt(document.getElementById('noiseSlider').value) / 100.0,
+                    eve: document.getElementById('eveCheckbox').checked,
+                    cascade_leak: parseInt(document.getElementById('cascadeSlider').value),
+                    qber_leak: parseInt(document.getElementById('qberLeakSlider').value) / 100.0,
+                    security_margin: parseInt(document.getElementById('marginSlider').value),
+                    qber_threshold: 0.5
+                };
+
+                // Validate parameters
+                if (params.n_bits < 100 || params.noise_prob < 0 || params.cascade_leak < 0 || 
+                    params.qber_leak < 0 || params.security_margin < 0) {
+                    throw new Error('Invalid simulation parameters');
+                }
+
+                console.textContent += `\nRunning QKD simulation with ${params.n_bits} qubits...\n`;
+                console.scrollTop = console.scrollHeight;
+
+                // Make API call to backend
+                const response = await fetch('/api/run_qkd', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(params)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                // Check for abort condition
+                if (data.log && data.log.toLowerCase().includes('abort')) {
+                    alert(`QKD Aborted: ${data.log}`);
+                    console.textContent += data.log + '\n';
+                    console.scrollTop = console.scrollHeight;
+                    return;
+                }
+
+                // Update console with full log
+                console.textContent += data.log + '\n';
+                console.textContent += `Final Key (Hex): ${data.hex_key}\n`;
+                console.textContent += `Final Key (Binary, First 20 Bits): ${data.binary_key}\n`;
+                console.scrollTop = console.scrollHeight;
+
+                // Update metrics
+                updateMetrics(data);
+
+                // Update bit agreement chart with actual data
+                updateBitAgreementChart(data.bitMatches, data.qber * 100);
+
+                // Add to run history
+                addToRunHistory(data, params);
+
+                // Update other charts
+                updateAllCharts();
+
+                console.textContent += 'SIMULATION RUN COMPLETE. DATA LOGGED AUTOMATICALLY.\n';
+                console.scrollTop = console.scrollHeight;
+
+            } catch (error) {
+                console.textContent += `ERROR: ${error.message.toUpperCase()}\n`;
+                console.scrollTop = console.scrollHeight;
+                alert(`Simulation failed: ${error.message}`);
+            } finally {
+                // Hide loading state
+                runBtn.disabled = false;
+                runBtn.style.opacity = '1';
+                loadingSpinner.style.display = 'none';
+            }
+        }
+
+        // Update metrics display
+        function updateMetrics(data) {
+            // Update QBER progress bar
+            const qberProgress = document.getElementById('qberProgress');
+            const qberValue = Math.max(0, Math.min(100, Math.round(data.qber * 100)));
+            qberProgress.style.width = qberValue + '%';
+            qberProgress.textContent = qberValue + '%';
+
+            // Update key length
+            document.getElementById('keyLength').textContent = data.key_length || 0;
+
+            // Update total leak
+            document.getElementById('totalLeak').textContent = data.total_leak || 0;
+        }
+
+        // Add run to history
+        function addToRunHistory(data, params) {
+            const timestamp = new Date();
+            const runEntry = {
+                timestamp: timestamp,
+                qubits: params.n_bits,
+                noise_percent: params.noise_prob * 100,
+                eve_enabled: params.eve,
+                qber_percent: data.qber * 100,
+                key_length: data.key_length,
+                cascade_leak: data.cascade_leak || 0,
+                qber_leak: data.qber_leak || 0,
+                pa_leak: data.pa_leak || 0,
+                margin: params.security_margin,
+                total_leak: data.total_leak || 0,
+                hex_key: data.hex_key || 'N/A',
+                binary_key: data.binary_key || 'N/A'
+            };
+
+            runHistory.push(runEntry);
+            keyLengthHistory.push(data.key_length);
+
+            // Update history table
+            const tbody = document.getElementById('historyTableBody');
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td>${timestamp.toLocaleTimeString()}</td>
+                <td>${params.n_bits}</td>
+                <td>${(params.noise_prob * 100).toFixed(1)}</td>
+                <td>${params.eve ? 'ON' : 'OFF'}</td>
+                <td>${(data.qber * 100).toFixed(2)}</td>
+                <td>${data.key_length}</td>
+            `;
+
+            // Scroll to bottom
+            tbody.scrollTop = tbody.scrollHeight;
+        }
+
+        // Update all charts
+        function updateAllCharts() {
+            updateQberChart();
+            updateKeyLengthChart();
+            updateKeyTrendChart();
+            updateLeakageChart();
+        }
+
+        // Update QBER vs Noise chart
+        function updateQberChart() {
+            if (runHistory.length === 0) return;
+
+            const eveOffData = runHistory.filter(entry => !entry.eve_enabled)
+                .sort((a, b) => a.noise_percent - b.noise_percent);
+            const eveOnData = runHistory.filter(entry => entry.eve_enabled)
+                .sort((a, b) => a.noise_percent - b.noise_percent);
+
+            const chart = charts.qberChart;
+            
+            if (eveOffData.length > 0) {
+                chart.data.datasets[0].data = eveOffData.map(entry => ({
+                    x: entry.noise_percent,
+                    y: entry.qber_percent
+                }));
+            }
+
+            if (eveOnData.length > 0) {
+                chart.data.datasets[1].data = eveOnData.map(entry => ({
+                    x: entry.noise_percent,
+                    y: entry.qber_percent
+                }));
+            }
+
+            chart.update();
+
+            if (popupChart && currentChartId === 'qberChart') {
+                popupChart.data.datasets[0].data = chart.data.datasets[0].data;
+                popupChart.data.datasets[1].data = chart.data.datasets[1].data;
+                popupChart.update();
+            }
+        }
+
+        // Update Key Length vs Noise chart
+        function updateKeyLengthChart() {
+            if (runHistory.length === 0) return;
+
+            const eveOffData = runHistory.filter(entry => !entry.eve_enabled)
+                .sort((a, b) => a.noise_percent - b.noise_percent);
+            const eveOnData = runHistory.filter(entry => entry.eve_enabled)
+                .sort((a, b) => a.noise_percent - b.noise_percent);
+
+            const chart = charts.keyLengthChart;
+            
+            if (eveOffData.length > 0) {
+                chart.data.datasets[0].data = eveOffData.map(entry => ({
+                    x: entry.noise_percent,
+                    y: entry.key_length
+                }));
+            }
+
+            if (eveOnData.length > 0) {
+                chart.data.datasets[1].data = eveOnData.map(entry => ({
+                    x: entry.noise_percent,
+                    y: entry.key_length
+                }));
+            }
+
+            chart.update();
+
+            if (popupChart && currentChartId === 'keyLengthChart') {
+                popupChart.data.datasets[0].data = chart.data.datasets[0].data;
+                popupChart.data.datasets[1].data = chart.data.datasets[1].data;
+                popupChart.update();
+            }
+        }
+
+        // Update Key Trend chart
+        function updateKeyTrendChart() {
+            const chart = charts.keyTrendChart;
+            chart.data.labels = keyLengthHistory.map((_, index) => index + 1);
+            chart.data.datasets[0].data = keyLengthHistory;
+            chart.update();
+
+            if (popupChart && currentChartId === 'keyTrendChart') {
+                popupChart.data.labels = chart.data.labels;
+                popupChart.data.datasets[0].data = chart.data.datasets[0].data;
+                popupChart.update();
+            }
+        }
+
+        // Update Leakage chart
+        function updateLeakageChart() {
+            if (runHistory.length === 0) return;
+
+            const lastRun = runHistory[runHistory.length - 1];
+            const chart = charts.leakageChart;
+            
+            chart.data.datasets[0].data = [
+                lastRun.cascade_leak,
+                lastRun.qber_leak,
+                lastRun.pa_leak,
+                lastRun.margin
+            ];
+            
+            chart.update();
+
+            if (popupChart && currentChartId === 'leakageChart') {
+                popupChart.data.datasets[0].data = chart.data.datasets[0].data;
+                popupChart.update();
+            }
+        }
+
+        // Reset simulation
+        function resetSimulation() {
+            // Clear console
+            document.getElementById('console').textContent = 'CLICK \'RUN QKD\' TO START SIMULATION...\n';
+            
+            // Clear history
+            runHistory = [];
+            keyLengthHistory = [];
+            document.getElementById('historyTableBody').innerHTML = '';
+            
+            // Reset metrics
+            document.getElementById('qberProgress').style.width = '0%';
+            document.getElementById('qberProgress').textContent = '0%';
+            document.getElementById('keyLength').textContent = '0';
+            document.getElementById('totalLeak').textContent = '0';
+            
+            // Reset controls to defaults
+            document.getElementById('qubits').value = 2048;
+            document.getElementById('noiseSlider').value = 0;
+            document.getElementById('cascadeSlider').value = 0;
+            document.getElementById('qberLeakSlider').value = 0;
+            document.getElementById('marginSlider').value = 0;
+            document.getElementById('eveCheckbox').checked = false;
+            
+            // Update slider displays
+            updateSliderValue('noise');
+            updateSliderValue('cascade');
+            updateSliderValue('qberLeak');
+            updateSliderValue('margin');
+            
+            // Sync popup controls
+            syncPopupControls();
+            
+            // Reset charts to baseline
+            initializeCharts();
+            updateBitAgreementChart([], 20.0);
+            
+            // Reset popup chart if open
+            if (popupChart && currentChartId) {
+                if (currentChartId === 'bitCharts') {
+                    popupChart.bitBarChart.destroy();
+                    popupChart.bitCumulativeChart.destroy();
+                    const popupCanvas = document.getElementById('popupChartCanvas');
+                    if (popupCanvas) {
+                        popupCanvas.parentElement.innerHTML = `
+                            <div style="height: 20%;">
+                                <canvas id="popupBitBarChart"></canvas>
+                            </div>
+                            <div style="flex: 1;">
+                                <canvas id="popupBitCumulativeChart"></canvas>
+                            </div>
+                        `;
+                        const bitBarCtx = document.getElementById('popupBitBarChart').getContext('2d');
+                        const bitCumulativeCtx = document.getElementById('popupBitCumulativeChart').getContext('2d');
+                        popupChart = {
+                            bitBarChart: new Chart(bitBarCtx, JSON.parse(JSON.stringify(charts.bitBarChart.config))),
+                            bitCumulativeChart: new Chart(bitCumulativeCtx, JSON.parse(JSON.stringify(charts.bitCumulativeChart.config)))
+                        };
+                        popupChart.bitBarChart.data = JSON.parse(JSON.stringify(charts.bitBarChart.data));
+                        popupChart.bitCumulativeChart.data = JSON.parse(JSON.stringify(charts.bitCumulativeChart.data));
+                        popupChart.bitBarChart.update();
+                        popupChart.bitCumulativeChart.update();
+                    }
+                } else {
+                    popupChart.destroy();
+                    const popupCanvas = document.getElementById('popupChartCanvas');
+                    if (popupCanvas) {
+                        popupCanvas.parentElement.innerHTML = '<canvas id="popupChartCanvas"></canvas>';
+                        const newCtx = document.getElementById('popupChartCanvas').getContext('2d');
+                        popupChart = new Chart(newCtx, JSON.parse(JSON.stringify(charts[currentChartId].config)));
+                        popupChart.data = JSON.parse(JSON.stringify(charts[currentChartId].data));
+                        popupChart.update();
+                    }
+                }
+            }
+            
+            alert('ALL DATA AND HISTORY RESET.');
+        }
+
+        // Export data
+        function exportData() {
+            if (runHistory.length === 0) {
+                alert('No simulation runs to export. Please run some simulations first.');
+                return;
+            }
+
+            const headers = ['Timestamp', 'Qubits', 'Noise (%)', 'Eve Enabled', 'QBER (%)', 'Key Length', 'Total Leak', 'Hex Key', 'Binary Key (First 20 Bits)'];
+            const csvContent = [
+                headers.join(','),
+                ...runHistory.map(entry => [
+                    entry.timestamp.toISOString(),
+                    entry.qubits,
+                    entry.noise_percent.toFixed(2),
+                    entry.eve_enabled ? 'Yes' : 'No',
+                    entry.qber_percent.toFixed(3),
+                    entry.key_length,
+                    entry.total_leak,
+                    `"${entry.hex_key}"`,
+                    `"${entry.binary_key}"`
+                ].join(','))
+            ].join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `qkd_export_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+
+            alert('Data exported successfully!');
+        }
+
+        // Generate report
+        function generateReport() {
+            if (runHistory.length === 0) {
+                alert('No simulation runs to export. Please run some simulations first.');
+                return;
+            }
+
+            const totalRuns = runHistory.length;
+            const avgQber = runHistory.reduce((sum, entry) => sum + entry.qber_percent, 0) / totalRuns;
+            const avgKeyLength = runHistory.reduce((sum, entry) => sum + entry.key_length, 0) / totalRuns;
+            const eveRuns = runHistory.filter(entry => entry.eve_enabled).length;
+
+            const reportContent = `
+VisualQKD Pro - Simulation Report
+Generated: ${new Date().toLocaleString()}
+
+SUMMARY STATISTICS:
+• Total Simulation Runs: ${totalRuns}
+• Average QBER: ${avgQber.toFixed(3)}%
+• Average Key Length: ${avgKeyLength.toFixed(0)} bits
+• Runs with Eve Attack: ${eveRuns} (${(eveRuns / totalRuns * 100).toFixed(1)}%)
+
+DETAILED RUN HISTORY:
+${runHistory.map((entry, index) => `
+Run ${index + 1} (${entry.timestamp.toLocaleString()}):
+  Qubits: ${entry.qubits}
+  Noise: ${entry.noise_percent.toFixed(1)}%
+  Eve: ${entry.eve_enabled ? 'Enabled' : 'Disabled'}
+  QBER: ${entry.qber_percent.toFixed(3)}%
+  Key Length: ${entry.key_length} bits
+  Total Leak: ${entry.total_leak} bits
+  Hex Key: ${entry.hex_key}
+  Binary Key (First 20 Bits): ${entry.binary_key}
+`).join('')}
+            `.trim();
+
+            const blob = new Blob([reportContent], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `qkd_report_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+
+            alert('Report generated successfully!');
+        }
+
+        // Initialize application
+        function initApp() {
+            initializeCharts();
+            updateBitAgreementChart([], 20.0);
+            
+            document.getElementById('noiseSlider').addEventListener('input', () => updateSliderValue('noise'));
+            document.getElementById('cascadeSlider').addEventListener('input', () => updateSliderValue('cascade'));
+            document.getElementById('qberLeakSlider').addEventListener('input', () => updateSliderValue('qberLeak'));
+            document.getElementById('marginSlider').addEventListener('input', () => updateSliderValue('margin'));
+            
+            document.addEventListener('keydown', (e) => {
+                if (e.ctrlKey && (e.key === 'Enter' || e.key === 'Return')) {
+                    runQKD();
+                } else if (e.key === 'F9') {
+                    resetSimulation();
+                } else if (e.key === 'F11') {
+                    e.preventDefault();
+                    toggleFullScreen();
+                }
+            });
+        }
+
+        // Toggle fullscreen
+        //function toggleFullScreen() {
+        //    if (!document.fullscreenElement) {
+         //       document.documentElement.requestFullscreen();
+        //    } else {
+        //        document.exitFullscreen();
+        //    }
+      //  }
+
+        // Start the application when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
